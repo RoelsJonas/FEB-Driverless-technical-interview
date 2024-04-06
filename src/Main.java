@@ -2,6 +2,8 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
+    public static final String inputFileName = "recruitment.txt";
+    public static final String outputFileName = "output.txt";
     public static boolean[][] track;
     public static Node[][] nodes;
     public static ArrayList<Node> path;
@@ -9,7 +11,7 @@ public class Main {
     public static double bestScore;
     public static ArrayList<Node> bestPath;
     public static void main(String[] args) throws IOException {
-        String inputFileName = "small.txt";
+        long startMillis = System.currentTimeMillis();
 
         // read the input file
         ArrayList<ArrayList<Character>> map = new ArrayList<>();
@@ -75,18 +77,47 @@ public class Main {
             path.remove(0);
         }
 
-        // print the best path
+        // generate output
+        for(int i = 0; i < bestPath.size() - 1; i++) {
+            Node current = bestPath.get(i);
+            Node next = bestPath.get(i+1);
+
+            if(current.x == next.x) {
+                if(current.y < next.y) map.get(current.x).set(current.y, '>');
+                else map.get(current.x).set(current.y, '<');
+            } else if(current.y == next.y) {
+                if(current.x < next.x) map.get(current.x).set(current.y, 'v');
+                else map.get(current.x).set(current.y, '^');
+            } else {
+                if(current.x < next.x && current.y < next.y) map.get(current.x).set(current.y, '\\');
+                else if(current.x < next.x && current.y > next.y) map.get(current.x).set(current.y, '/');
+                else if(current.x > next.x && current.y < next.y) map.get(current.x).set(current.y, '/');
+                else map.get(current.x).set(current.y, '\\');
+            }
+        }
+        Node last = bestPath.get(bestPath.size()-1);
+        map.get(last.x).set(last.y, 'v');
+
+        // print the output
         for(int i = 0; i < map.size(); i++) {
             for(int j = 0; j < map.get(0).size(); j++) {
-                if(nodes[i][j] == null) System.out.print("X");
-                else {
-                    if(bestPath.contains(nodes[i][j])) System.out.print("1");
-                    else System.out.print("0");
-                }
+                System.out.print(map.get(i).get(j));
             }
             System.out.println();
         }
 
+        // write the output to a file
+        FileWriter writer = new FileWriter(outputFileName);
+        for(int i = 0; i < map.size(); i++) {
+            for(int j = 0; j < map.get(0).size(); j++) {
+                writer.write(map.get(i).get(j));
+            }
+            writer.write("\n");
+        }
+        writer.close();
+
+        // print the processing time
+        System.out.println("Processing time: " + (System.currentTimeMillis() - startMillis) + "ms");
     }
 
     public static void branchAndBound(Node currentNode) {
@@ -115,9 +146,16 @@ public class Main {
 
             // update the lowerbound of the neighbor
 //            e.neighbor.lowerbound = Math.max(e.neighbor.lowerbound, currentNode.lowerbound - 1); // TODO: check if this is correct
+            // TODO UPDATE BOUNDS/SCORE
+            // TODO REMOVE NODES THAT ALSO ARE NEIGHBORS OF THE PREVIOUS NODES (DIRECT PATH IS ALWAYS BETTER)
 
-            // recursively visit the neighbor
-            branchAndBound(e.neighbor);
+
+            // recursively visit the neighbor if the current score is lower then the previous best to reach this node
+            if(score < e.neighbor.upperbound) {
+                // Adjust the (local) upperbound (minimum score necessary to reach this node)
+                e.neighbor.upperbound = score;
+                branchAndBound(e.neighbor);
+            }
 
             // remove the neighbor from the path
             path.remove(path.size()-1);
