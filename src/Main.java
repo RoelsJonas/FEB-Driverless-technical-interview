@@ -11,6 +11,7 @@ public class Main {
     public static double score;
     public static double bestScore;
     public static ArrayList<Node> bestPath;
+
     public static void main(String[] args) throws IOException {
         long startMillis = System.currentTimeMillis();
         ArrayList<ArrayList<Character>> map = readInput();
