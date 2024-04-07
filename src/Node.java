@@ -6,14 +6,18 @@ public class Node {
     public final int y;
     public double lowerbound;
     public double upperbound;
+    public double cost;
     public final ArrayList<Edge> neighbors;
+    public Node parent;
 
     public Node(int x, int y) {
         this.x = x;
         this.y = y;
         lowerbound = 0;
-        upperbound = Integer.MAX_VALUE/2;
+        upperbound = Double.POSITIVE_INFINITY;
+        cost = Double.POSITIVE_INFINITY;
         neighbors = new ArrayList<>();
+        parent = null;
     }
 
     public void addNeighbor(Node neighbor) {

@@ -39,15 +39,18 @@ public class Main {
         score = 0;
         bestScore = Integer.MAX_VALUE;
         // loop over all possible starting positions
-        for(int i = 0; i < nodes[0].length; i++) {
-            if(nodes[0][i] == null) continue;
-            path.add(nodes[0][i]);
-            branchAndBound(nodes[0][i]);
-            path.remove(0);
-        }
+//        for(int i = 0; i < nodes[0].length; i++) {
+//            if(nodes[0][i] == null) continue;
+//            path.add(nodes[0][i]);
+//            branchAndBound(nodes[0][i]);
+//            path.remove(0);
+//        }
 
+        dijkstra();
         generateOutput(map);
         writeOutput(map);
+
+
 
         // print the output
         if(DEBUG) {
@@ -194,5 +197,54 @@ public class Main {
             path.remove(path.size()-1);
             score -= e.weight.value;
         }
+    }
+
+    public static void dijkstra() {
+        // create a queue and find a starting node
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.cost));
+        Set<Node> visited = new HashSet<>();
+
+        for(int i = 0; i < nodes[0].length; i++) {
+            if(nodes[0][i] != null) {
+                nodes[0][i].cost = 0;
+                queue.offer(nodes[0][i]);
+            }
+        }
+
+        while(!queue.isEmpty()) {
+            Node current = queue.poll();
+            if(visited.contains(current)) continue;
+            visited.add(current);
+
+            for(Edge e : current.neighbors) {
+                if(visited.contains(e.neighbor)) continue;
+
+                double newCost = current.cost + e.weight.value;
+                if(newCost < e.neighbor.cost) {
+                    e.neighbor.parent = current;
+                    e.neighbor.cost = newCost;
+                    queue.offer(e.neighbor);
+                }
+            }
+        }
+
+        for(int i = 0; i < nodes[nodes.length-1].length; i++) {
+            if(nodes[nodes.length-1][i] != null) {
+//                System.out.println("Cost to reach node " + nodes.length + "," + i + ": " + nodes[nodes.length-1][i].cost);
+                if(nodes[nodes.length-1][i].cost < bestScore) {
+                    bestScore = nodes[nodes.length-1][i].cost;
+                    bestPath = new ArrayList<>();
+                    bestPath.add(nodes[nodes.length-1][i]);
+                }
+                bestScore = Math.min(bestScore, nodes[nodes.length-1][i].cost);
+            }
+        }
+
+        Node current = bestPath.get(0);
+        while(current.parent != null) {
+            bestPath.add(0, current.parent);
+            current = current.parent;
+        }
+        System.out.println("Best score: " + bestScore);
     }
 }
