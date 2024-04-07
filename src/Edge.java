@@ -1,6 +1,6 @@
 public class Edge {
-    public Node neighbor;
-    public WEIGHT weight;
+    public final Node neighbor;
+    public final WEIGHT weight;
 
     public Edge(Node neighbor, WEIGHT weight) {
         this.neighbor = neighbor;

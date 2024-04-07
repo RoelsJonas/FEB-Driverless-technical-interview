@@ -2,11 +2,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 public class Node {
-    public int x;
-    public int y;
+    public final int x;
+    public final int y;
     public double lowerbound;
     public double upperbound;
-    public ArrayList<Edge> neighbors;
+    public final ArrayList<Edge> neighbors;
 
     public Node(int x, int y) {
         this.x = x;

@@ -2,18 +2,23 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
-    public static final String inputFileName = "recruitment.txt";
-    public static final String outputFileName = "output.txt";
-    public static final boolean DEBUG = false;
-    public static boolean[][] track;
-    public static Node[][] nodes;
-    public static ArrayList<Node> path;
-    public static double score;
-    public static double bestScore;
-    public static ArrayList<Node> bestPath;
+    private static String inputFileName = "recruitment.txt";
+    private static String outputFileName = "output.txt";
+    private static boolean DEBUG = false;
+    private static boolean[][] track;
+    private static Node[][] nodes;
+    private static ArrayList<Node> path;
+    private static double score;
+    private static double bestScore;
+    private static ArrayList<Node> bestPath;
 
     public static void main(String[] args) throws IOException {
         long startMillis = System.currentTimeMillis();
+
+        if(args.length > 0) inputFileName = args[0];
+        if(args.length > 1) outputFileName = args[1];
+        if(args.length > 2) DEBUG = Boolean.parseBoolean(args[2]);
+
         ArrayList<ArrayList<Character>> map = readInput();
         createNodes(map);
         initializeGraph(map);
@@ -94,7 +99,7 @@ public class Main {
         map.get(last.x).set(last.y, 'v');
     }
 
-    // initialize the graph with neighbors and bounds
+    // initialize the graph with neighbors
     private static void initializeGraph(ArrayList<ArrayList<Character>> map) {
         for (int i = 0; i < map.size(); i++) {
             for (int j = 0; j < map.get(0).size(); j++) {
@@ -109,11 +114,8 @@ public class Main {
                 if(i < map.size()-1 && j > 0 && nodes[i+1][j-1] != null) nodes[i][j].addNeighbor(nodes[i+1][j-1]);
                 if(i < map.size()-1 && j < map.get(0).size()-1 && nodes[i+1][j+1] != null) nodes[i][j].addNeighbor(nodes[i+1][j+1]);
 
+                // sort neighbors based on lowerbound (ascending) to optimize the amount of pruning that can be done
                 nodes[i][j].sortNeighbors();
-
-                // initial lowerbound is the number of nodes from that node to the bottom row
-                nodes[i][j].lowerbound = nodes.length - i - 1;
-                nodes[i][j].upperbound = Integer.MAX_VALUE/2;
             }
         }
     }
@@ -123,7 +125,13 @@ public class Main {
         nodes = new Node[map.size()][map.get(0).size()];
         for (int i = 0; i < map.size(); i++) {
             for (int j = 0; j < map.get(0).size(); j++) {
-                if(map.get(i).get(j).charValue() == '0') nodes[i][j] = new Node(i, j);
+                if(map.get(i).get(j).charValue() == '0') {
+                    nodes[i][j] = new Node(i, j);
+
+                    // initial lowerbound is the number of nodes from that node to the bottom row
+                    nodes[i][j].lowerbound = nodes.length - i - 1;
+                    nodes[i][j].upperbound = Integer.MAX_VALUE/2;
+                }
                 else nodes[i][j] = null;
             }
         }
@@ -153,7 +161,7 @@ public class Main {
             if(score < bestScore) {
                 bestScore = score;
                 bestPath = new ArrayList<>(path);
-                System.out.println("New best path found with score: " + bestScore);
+                if(DEBUG) System.out.println("New best path found with score: " + bestScore);
             }
             return;
         }
@@ -163,8 +171,9 @@ public class Main {
             // check if the neighbor isn't already on the path
             if(path.contains(e.neighbor)) continue;
 
-            // check if this branch can be pruned
+            // check if this branch can be pruned (still possible to decrease overall cost and lowest cost yet to reach this neighbor)
             if(score + e.weight.value + e.neighbor.lowerbound >= bestScore) continue;
+            if(score + e.weight.value >= e.neighbor.upperbound) continue;
 
             // add the neighbor to the path
             path.add(e.neighbor);
@@ -176,12 +185,10 @@ public class Main {
             // TODO REMOVE NODES THAT ALSO ARE NEIGHBORS OF THE PREVIOUS NODES (DIRECT PATH IS ALWAYS BETTER)
 
 
-            // recursively visit the neighbor if the current score is lower then the previous best to reach this node
-            if(score < e.neighbor.upperbound) {
-                // Adjust the (local) upperbound (minimum score necessary to reach this node)
-                e.neighbor.upperbound = score;
-                branchAndBound(e.neighbor);
-            }
+            // recursively visit the neighbor
+            // Adjust the (local) upperbound (minimum score necessary to reach this node)
+            e.neighbor.upperbound = score;
+            branchAndBound(e.neighbor);
 
             // remove the neighbor from the path
             path.remove(path.size()-1);
