@@ -135,6 +135,7 @@ public class Main {
         return map;
     }
 
+    // Implementation of the Dijkstra algorithm with A* heuristic
     public static void dijkstra() {
         // create the queue
         PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.predicion));
