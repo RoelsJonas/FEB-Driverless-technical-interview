@@ -109,7 +109,11 @@ public class Main {
         nodes = new Node[map.size()][map.get(0).size()];
         for (int i = 0; i < map.size(); i++) {
             for (int j = 0; j < map.get(0).size(); j++) {
-                if(map.get(i).get(j).charValue() == '0') nodes[i][j] = new Node(i, j);
+                if(map.get(i).get(j).charValue() == '0') {
+                    nodes[i][j] = new Node(i, j);
+                    // distance to bottom
+                    nodes[i][j].heuristic = map.size() - i - 1;
+                }
                 else nodes[i][j] = null;
             }
         }
@@ -131,26 +135,38 @@ public class Main {
         return map;
     }
 
+    // Implementation of the Dijkstra algorithm with A* heuristic
     public static void dijkstra() {
         // create the queue
-        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.cost));
+        PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingDouble(n -> n.predicion));
         Set<Node> visited = new HashSet<>();
 
         // add all starting nodes
         for(int i = 0; i < nodes[0].length; i++) {
             if(nodes[0][i] != null) {
                 nodes[0][i].cost = 0;
+                nodes[0][i].predicion = nodes[0][i].cost + nodes[0][i].heuristic;
                 queue.offer(nodes[0][i]);
             }
         }
 
+        Node current = nodes[0][0];
         // run the dijkstra algorithm
         while(!queue.isEmpty()) {
+            // get the next node from the queue
+            current = queue.poll();
 
-            // get the next node from the queue and check if we already visited it
-            Node current = queue.poll();
+            // check if we already visited the current node
             if(visited.contains(current)) continue;
             visited.add(current);
+
+            // check if we have reached the end (first time reaching this is guaranteed to be the best)
+            // Dijkstra is a single source, all destinations algorithm
+            if(current.x == nodes.length-1) {
+                bestPath.set(0, current);
+                bestScore = current.cost;
+                break;
+            }
 
             // loop over all neighbors
             for(Edge e : current.neighbors) {
@@ -162,22 +178,13 @@ public class Main {
                 if(newCost < e.neighbor.cost) {
                     e.neighbor.parent = current;
                     e.neighbor.cost = newCost;
+                    e.neighbor.predicion = e.neighbor.cost + e.neighbor.heuristic;
                     queue.offer(e.neighbor);
                 }
             }
         }
 
-        // find the best ending node
-        for(int i = 0; i < nodes[nodes.length-1].length; i++) {
-            if(nodes[nodes.length-1][i] == null) continue;
-            if(nodes[nodes.length-1][i].cost < bestScore) {
-                bestScore = nodes[nodes.length-1][i].cost;
-                bestPath.set(0, nodes[nodes.length-1][i]);
-            }
-        }
-
         // reconstruct the path
-        Node current = bestPath.get(0);
         while(current.parent != null) {
             bestPath.add(0, current.parent);
             current = current.parent;
