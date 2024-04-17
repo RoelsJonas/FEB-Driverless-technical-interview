@@ -7,6 +7,8 @@ public class Node {
     public double cost;
     public double heuristic;
     public double predicion;
+    public double lowerbound;
+    public double upperbound;
     public final ArrayList<Edge> neighbors;
     public Node parent;
 
@@ -16,6 +18,8 @@ public class Node {
         cost = Double.POSITIVE_INFINITY;
         heuristic = 0;
         predicion = Double.POSITIVE_INFINITY;
+        lowerbound = 0;
+        upperbound = Double.POSITIVE_INFINITY;
         neighbors = new ArrayList<>();
         parent = null;
     }
@@ -25,5 +29,9 @@ public class Node {
             neighbors.add(new Edge(neighbor, WEIGHT.SQRT_TWO));
         else
             neighbors.add(new Edge(neighbor, WEIGHT.ONE));
+    }
+
+    public void sortNeighbors() {
+        neighbors.sort(Comparator.comparingDouble(e -> e.neighbor.lowerbound));
     }
 }

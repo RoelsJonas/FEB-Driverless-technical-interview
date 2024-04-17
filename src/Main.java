@@ -112,7 +112,7 @@ public class Main {
                 if(map.get(i).get(j).charValue() == '0') {
                     nodes[i][j] = new Node(i, j);
                     // distance to bottom
-                    nodes[i][j].heuristic = map.size() - i - 1;
+//                    nodes[i][j].heuristic = map.size() - i - 1;
                 }
                 else nodes[i][j] = null;
             }
